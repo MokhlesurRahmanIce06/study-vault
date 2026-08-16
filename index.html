@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Study Vault - GitHub CRUD</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📚 আমার স্টাডি ভল্ট</h1>
+        <p style="color: #666; margin-bottom: 15px;">🔐 টোকেন সেট করে <strong>ডেটা লোড</strong> করুন, তারপর CRUD করুন এবং <strong>সিঙ্ক</strong> করুন।</p>
+        
+        <!-- কনফিগ সেকশন -->
+        <div id="tokenSection" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                <label><strong>🔑 Token:</strong></label>
+                <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxx" style="flex:1; min-width:200px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                
+                <label><strong>📂 Repo:</strong></label>
+                <input type="text" id="repoName" placeholder="username/study-vault" style="flex:1; min-width:150px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                
+                <button onclick="saveConfig()" class="btn btn-success">💾 সেভ</button>
+                <button onclick="loadFromGitHub()" class="btn btn-primary">📥 লোড</button>
+                <button onclick="syncToGitHub()" class="btn btn-info" id="syncBtn">☁️ সিঙ্ক</button>
+            </div>
+            <div id="statusMsg" style="margin-top: 8px; font-size: 14px; color: #28a745;"></div>
+        </div>
+
+        <!-- স্ট্যাটাস বার -->
+        <div id="syncStatus" style="padding: 10px; margin: 10px 0; border-radius: 6px; display: none;"></div>
+
+        <!-- ফর্ম -->
+        <div class="form-card">
+            <h3 id="formTitle">➕ নতুন টপিক যোগ করুন</h3>
+            <input type="hidden" id="editId">
+            <div class="form-grid">
+                <input type="text" id="mainTopic" placeholder="Main Topic * (যেমন: DBMS)" required>
+                <input type="text" id="subTopic" placeholder="Sub-Topic * (যেমন: ACID)" required>
+                <input type="text" id="questions" placeholder="Questions (কমা দিয়ে আলাদা)">
+                <textarea id="answer" placeholder="My Answer (Bullets)" rows="2"></textarea>
+                <input type="text" id="source" placeholder="Source (বই/ভিডিও)">
+                <input type="text" id="vivaRef" placeholder="Viva/Job Ref">
+                <input type="text" id="remarks" placeholder="Remarks">
+                <input type="number" id="captured" placeholder="Captured % (0-100)" min="0" max="100">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                <button onclick="saveTopic()" class="btn btn-primary" id="saveBtn">💾 সেভ করুন</button>
+                <button onclick="resetForm()" class="btn btn-secondary">❌ ক্লিয়ার</button>
+                <span style="margin-left: auto; font-size: 12px; color: #999;">* চিহ্নিত ফিল্ড আবশ্যক</span>
+            </div>
+        </div>
+
+        <!-- টেবিল -->
+        <div style="overflow-x: auto; margin-top: 20px;">
+            <table id="studyTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Main Topic</th>
+                        <th>Sub-Topic</th>
+                        <th>Questions</th>
+                        <th>Answer</th>
+                        <th>Study Count</th>
+                        <th>Captured %</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="8" style="text-align:center; padding:30px; color:#999;">
+                        ⚙️ উপরে টোকেন ও রেপো সেট করে '📥 লোড' ক্লিক করুন
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ফুটার -->
+        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; font-size: 12px; color: #999; text-align: center;">
+            💡 সব ডেটা GitHub-এর <code>data.json</code> ফাইলে সেভ হয়। পরিবর্তন করার পর <strong>☁️ সিঙ্ক</strong> বাটন চাপতে ভুলবেন না!
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
