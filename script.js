@@ -640,6 +640,19 @@ function showStatus(message, type) {
 }
 
 // ========================================
+// স্টাডি ভিউ ওপেন
+// ========================================
+function openStudyView(id) {
+    // প্রথমে ডেটা localStorage-এ সেভ করুন
+    const data = { topics, nextId };
+    localStorage.setItem('studyVaultData', JSON.stringify(data));
+    
+    // নতুন ট্যাবে study.html ওপেন করুন
+    window.open(`study.html?id=${id}`, '_blank');
+}
+
+
+// ========================================
 // মডালের বাইরে ক্লিক করলে বন্ধ
 // ========================================
 window.onclick = function(event) {
@@ -669,3 +682,5 @@ window.onload = function() {
     document.getElementById('dateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
     document.getElementById('dateTo').value = today.toISOString().split('T')[0];
 };
+
+
