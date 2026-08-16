@@ -13,6 +13,7 @@ let currentSha = '';
 let duplicateData = null;
 let tempTopic = null;
 let filteredTopics = [];
+let isSyncing = false;
 
 // ========================================
 // কনফিগ ম্যানেজমেন্ট
@@ -107,24 +108,31 @@ async function loadFromGitHub() {
 }
 
 // ========================================
-// GitHub API - ডেটা সিঙ্ক
+// GitHub API - অটো সিঙ্ক (স্বয়ংক্রিয়)
 // ========================================
-async function syncToGitHub() {
+async function autoSyncToGitHub(operation = '') {
+    // কনফিগ চেক
     if (!config.token || !config.repo) {
-        alert('⚠️ আগে কনফিগ সেভ করুন!');
-        return;
+        console.warn('⚠️ কনফিগ সেট করা নেই, সিঙ্ক হচ্ছে না');
+        return false;
     }
 
+    // যদি ইতিমধ্যে সিঙ্ক চলছে
+    if (isSyncing) {
+        console.log('⏳ ইতিমধ্যে সিঙ্ক চলছে, অপেক্ষা করুন...');
+        return false;
+    }
+
+    // যদি কোনো ডেটা না থাকে
     if (topics.length === 0) {
-        alert('⚠️ সিঙ্ক করার মতো কোনো ডেটা নেই!');
-        return;
+        console.log('📭 সিঙ্ক করার মতো কোনো ডেটা নেই');
+        return false;
     }
 
+    isSyncing = true;
     const syncBtn = document.getElementById('syncBtn');
     syncBtn.disabled = true;
     syncBtn.textContent = '⏳ সিঙ্কিং...';
-
-    showStatus('⏳ GitHub-এ আপলোড হচ্ছে...', 'info');
 
     try {
         const data = { topics, nextId };
@@ -134,7 +142,7 @@ async function syncToGitHub() {
         const url = `https://api.github.com/repos/${config.repo}/contents/${config.path}`;
         
         const body = {
-            message: `Update data.json - ${new Date().toLocaleString('bn-BD')}`,
+            message: `${operation} - ${new Date().toLocaleString('bn-BD')}`,
             content: base64Content,
             sha: currentSha || undefined
         };
@@ -157,15 +165,25 @@ async function syncToGitHub() {
         const result = await response.json();
         currentSha = result.content.sha;
         
-        showStatus(`✅ সিঙ্ক সফল! ${new Date().toLocaleTimeString('bn-BD')}`, 'success');
+        showStatus(`✅ ${operation} সফল! ${new Date().toLocaleTimeString('bn-BD')}`, 'success');
+        return true;
         
     } catch (error) {
         console.error('সিঙ্ক ত্রুটি:', error);
         showStatus(`❌ সিঙ্ক ব্যর্থ: ${error.message}`, 'error');
+        return false;
     } finally {
+        isSyncing = false;
         syncBtn.disabled = false;
         syncBtn.textContent = '☁️ সিঙ্ক';
     }
+}
+
+// ========================================
+// ম্যানুয়াল সিঙ্ক (যদি প্রয়োজন হয়)
+// ========================================
+async function syncToGitHub() {
+    await autoSyncToGitHub('ম্যানুয়াল সিঙ্ক');
 }
 
 // ========================================
@@ -226,12 +244,21 @@ function updateFrequentTopics() {
 }
 
 // ========================================
-// রেন্ডার অল
+// রেন্ডার অল (অটো সিঙ্ক সহ)
 // ========================================
-function renderAll() {
+function renderAll(operation = '') {
     applyFilters();
     updateDashboard();
     updateFrequentTopics();
+    
+    // অটো সিঙ্ক - শুধুমাত্র যদি ডেটা থাকে এবং কনফিগ সেট করা থাকে
+    if (topics.length > 0 && config.token && config.repo) {
+        // ডিবাউন্স - 500ms পর সিঙ্ক হবে (একাধিক কল এড়াতে)
+        clearTimeout(window._syncTimeout);
+        window._syncTimeout = setTimeout(() => {
+            autoSyncToGitHub(operation || 'ডেটা আপডেট');
+        }, 500);
+    }
 }
 
 // ========================================
@@ -245,19 +272,14 @@ function applyFilters() {
     const dateTo = document.getElementById('dateTo').value;
     
     filteredTopics = topics.filter(t => {
-        // সার্চ ফিল্টার
         const matchText = t.mainTopic.toLowerCase().includes(query) ||
                          t.subTopic.toLowerCase().includes(query) ||
                          t.question.toLowerCase().includes(query) ||
                          (t.answer && t.answer.toLowerCase().includes(query));
         
-        // স্ট্যাটাস ফিল্টার
         const matchStatus = statusFilter === 'all' || t.knowledgeStatus === statusFilter;
-        
-        // ডিফিকালটি ফিল্টার
         const matchDifficulty = difficultyFilter === 'all' || t.difficulty === difficultyFilter;
         
-        // ডেট রেঞ্জ ফিল্টার
         let matchDate = true;
         if (dateFrom || dateTo) {
             const createdDate = t.dateCreated ? t.dateCreated.split(' ')[0] : '';
@@ -475,7 +497,7 @@ function addAsVariant() {
         tempTopic.studyCount = 0;
         tempTopic.dateCreated = getCurrentDateTime();
         topics.push(tempTopic);
-        renderAll();
+        renderAll('ভ্যারিয়েন্ট যোগ');
         closeDuplicateAlert();
         closeModal();
         showStatus('✅ Added as new variant!', 'success');
@@ -492,7 +514,7 @@ function updateExisting() {
                 version: (topics[index].version || 1) + 1,
                 lastUpdated: getCurrentDateTime()
             };
-            renderAll();
+            renderAll('এক্সিস্টিং আপডেট');
             closeDuplicateAlert();
             closeModal();
             showStatus('✅ Existing topic updated!', 'success');
@@ -506,7 +528,7 @@ function createNew() {
         tempTopic.studyCount = 0;
         tempTopic.dateCreated = getCurrentDateTime();
         topics.push(tempTopic);
-        renderAll();
+        renderAll('নতুন টপিক');
         closeDuplicateAlert();
         closeModal();
         showStatus('✅ New topic created successfully!', 'success');
@@ -514,7 +536,7 @@ function createNew() {
 }
 
 // ========================================
-// CRUD অপারেশন
+// CRUD অপারেশন (অটো সিঙ্ক সহ)
 // ========================================
 function saveTopic() {
     const id = document.getElementById('editId').value;
@@ -539,7 +561,6 @@ function saveTopic() {
         dateCreated: getCurrentDateTime()
     };
 
-    // ভ্যালিডেশন
     if (!topic.mainTopic || !topic.subTopic || !topic.question) {
         alert('⚠️ Main Topic, Sub Topic এবং Question অবশ্যই পূরণ করুন!');
         return;
@@ -556,9 +577,9 @@ function saveTopic() {
                 lastUpdated: getCurrentDateTime()
             };
         }
-        renderAll();
+        renderAll('টপিক আপডেট');
         closeModal();
-        showStatus('✅ টপিক আপডেট হয়েছে! সিঙ্ক করুন।', 'success');
+        showStatus('✅ টপিক আপডেট হয়েছে!', 'success');
         return;
     }
 
@@ -572,17 +593,17 @@ function saveTopic() {
     // নতুন যোগ
     topic.id = nextId++;
     topics.push(topic);
-    renderAll();
+    renderAll('নতুন টপিক যোগ');
     closeModal();
-    showStatus('✅ টপিক যোগ হয়েছে! সিঙ্ক করুন।', 'success');
+    showStatus('✅ টপিক যোগ হয়েছে!', 'success');
 }
 
 function deleteTopic(id) {
     if (!confirm('⚠️ কি আপনি এই টপিক ডিলিট করতে চান?')) return;
     
     topics = topics.filter(t => t.id !== id);
-    renderAll();
-    showStatus('🗑️ ডিলিট হয়েছে। সিঙ্ক করুন।', 'warning');
+    renderAll('টপিক ডিলিট');
+    showStatus('🗑️ ডিলিট হয়েছে।', 'warning');
 }
 
 function incrementStudy(id) {
@@ -590,8 +611,8 @@ function incrementStudy(id) {
     if (topic) {
         topic.studyCount = (topic.studyCount || 0) + 1;
         topic.lastStudied = getCurrentDateTime();
-        renderAll();
-        showStatus('📈 স্টাডি কাউন্ট +১ হয়েছে! সিঙ্ক করুন।', 'info');
+        renderAll('স্টাডি কাউন্ট +১');
+        showStatus('📈 স্টাডি কাউন্ট +১ হয়েছে!', 'info');
     }
 }
 
