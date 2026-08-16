@@ -334,7 +334,7 @@ function renderTable(data = null) {
             <td class="actions">
                 <button onclick="openEditModal(${t.id})" class="btn btn-primary" style="padding:2px 10px;" title="এডিট">✏️</button>
                 <button onclick="deleteTopic(${t.id})" class="btn btn-danger" style="padding:2px 10px;" title="ডিলিট">🗑️</button>
-                <button onclick="viewDetails(${t.id})" class="btn btn-info" style="padding:2px 10px;" title="ডিটেইলস">📄</button>
+                <button onclick="openStudyView(${t.id})" class="btn btn-info" style="padding:2px 10px;" title="স্টাডি ভিউ">📖</button>
             </td>
         </tr>
     `).join('');
