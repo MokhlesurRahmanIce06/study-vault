@@ -1,3 +1,6 @@
+/* ========================================
+   বেসিক স্টাইল
+   ======================================== */
 * {
     margin: 0;
     padding: 0;
@@ -12,7 +15,7 @@ body {
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
     background: white;
     padding: 25px;
@@ -20,12 +23,25 @@ body {
     box-shadow: 0 2px 10px rgba(0,0,0,0.08);
 }
 
-h1 {
+/* ========================================
+   হেডার
+   ======================================== */
+.header {
+    margin-bottom: 20px;
+}
+
+.header h1 {
     color: #1a1a2e;
-    font-size: 28px;
+    font-size: 32px;
     border-left: 5px solid #4a90d9;
     padding-left: 15px;
     margin-bottom: 5px;
+}
+
+.header p {
+    color: #666;
+    font-size: 14px;
+    padding-left: 20px;
 }
 
 code {
@@ -36,7 +52,60 @@ code {
     color: #d63384;
 }
 
-/* বাটন স্টাইল */
+/* ========================================
+   কনফিগ সেকশন
+   ======================================== */
+.config-section {
+    background: #fff3cd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #ffc107;
+}
+
+.config-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.config-field {
+    flex: 1;
+    min-width: 150px;
+}
+
+.config-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #856404;
+    margin-bottom: 3px;
+}
+
+.config-field input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.config-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.status-msg {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #28a745;
+}
+
+/* ========================================
+   বাটন
+   ======================================== */
 .btn {
     padding: 8px 20px;
     border: none;
@@ -67,7 +136,93 @@ code {
 .btn-danger { background: #dc3545; color: white; }
 .btn-warning { background: #ffc107; color: #212529; }
 
-/* ফর্ম কার্ড */
+/* ========================================
+   স্ট্যাটাস বার
+   ======================================== */
+.sync-status {
+    padding: 12px;
+    border-radius: 6px;
+    margin: 10px 0;
+    display: none;
+}
+
+/* ========================================
+   ড্যাশবোর্ড
+   ======================================== */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-top: 4px;
+}
+
+/* ========================================
+   ফ্রিকোয়েন্টলি স্টাডিয়েড
+   ======================================== */
+.frequent-section {
+    background: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.frequent-section h3 {
+    font-size: 16px;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+}
+
+.frequent-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.frequent-item {
+    background: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid #dee2e6;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.frequent-item .count {
+    color: #4a90d9;
+    font-weight: 700;
+}
+
+/* ========================================
+   ফর্ম
+   ======================================== */
 .form-card {
     background: #f8f9fa;
     padding: 20px;
@@ -84,13 +239,13 @@ code {
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 12px;
-    margin-top: 5px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
 }
 
 .form-grid input,
-.form-grid textarea {
+.form-grid select {
     padding: 10px 12px;
     border: 1px solid #ced4da;
     border-radius: 6px;
@@ -100,18 +255,126 @@ code {
 }
 
 .form-grid input:focus,
-.form-grid textarea:focus {
+.form-grid select:focus,
+.form-textarea-grid input:focus,
+.form-textarea-grid textarea:focus {
     outline: none;
     border-color: #4a90d9;
     box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.1);
 }
 
-.form-grid textarea {
-    resize: vertical;
-    min-height: 50px;
+.form-textarea-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
 }
 
-/* টেবিল */
+.form-textarea-grid input,
+.form-textarea-grid textarea {
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 100%;
+    transition: border-color 0.2s;
+}
+
+.form-textarea-grid textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* ========================================
+   ডুপ্লিকেট এলার্ট
+   ======================================== */
+.duplicate-alert {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.duplicate-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.duplicate-content h4 {
+    color: #dc3545;
+    margin-bottom: 10px;
+}
+
+.duplicate-content p {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.duplicate-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.duplicate-actions .btn {
+    flex: 1;
+    min-width: 100px;
+    text-align: center;
+}
+
+/* ========================================
+   সার্চ
+   ======================================== */
+.search-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.search-section input,
+.search-section select {
+    padding: 10px 14px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.search-section input {
+    flex: 2;
+    min-width: 200px;
+}
+
+.search-section select {
+    flex: 1;
+    min-width: 120px;
+}
+
+/* ========================================
+   টেবিল
+   ======================================== */
+.table-container {
+    overflow-x: auto;
+    margin-top: 15px;
+}
+
 #studyTable {
     width: 100%;
     border-collapse: collapse;
@@ -127,86 +390,148 @@ code {
 #studyTable th {
     background: #1a1a2e;
     color: white;
-    padding: 12px 10px;
+    padding: 10px 8px;
     text-align: left;
     font-weight: 600;
     white-space: nowrap;
+    font-size: 12px;
 }
 
 #studyTable td {
-    padding: 10px 10px;
+    padding: 8px 8px;
     border-bottom: 1px solid #e9ecef;
     vertical-align: middle;
-    max-width: 200px;
+    max-width: 180px;
     word-break: break-word;
+    font-size: 13px;
 }
 
 #studyTable tr:hover {
     background: #f8f9fa;
 }
 
-#studyTable tr:last-child td {
-    border-bottom: none;
+/* ========================================
+   স্ট্যাটাস ব্যাজ
+   ======================================== */
+.status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
-/* ব্যাজ */
+.status-New { background: #fff3cd; color: #856404; }
+.status-Learning { background: #cce5ff; color: #004085; }
+.status-Practicing { background: #ffe5d0; color: #8a4b00; }
+.status-Comfortable { background: #d4edda; color: #155724; }
+.status-Interview\ Ready { background: #d1ecf1; color: #0c5460; }
+.status-Needs\ Revision { background: #f8d7da; color: #721c24; }
+
 .badge {
     display: inline-block;
-    padding: 2px 12px;
+    padding: 2px 10px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 700;
     color: white;
     text-align: center;
-    min-width: 35px;
+    min-width: 30px;
 }
 
-/* অ্যাকশন বাটন */
+.badge-success { background: #28a745; }
+.badge-warning { background: #ffc107; color: #212529; }
+.badge-danger { background: #dc3545; }
+.badge-info { background: #17a2b8; }
+
 .actions {
     display: flex;
-    gap: 5px;
+    gap: 4px;
     flex-wrap: wrap;
 }
 
 .actions .btn {
-    padding: 4px 12px;
-    font-size: 13px;
+    padding: 3px 10px;
+    font-size: 12px;
 }
 
-/* রেস্পন্সিভ */
+/* ========================================
+   ফুটার
+   ======================================== */
+.footer {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+}
+
+/* ========================================
+   রেস্পন্সিভ
+   ======================================== */
 @media (max-width: 768px) {
     .container {
         padding: 15px;
     }
+    
     .form-grid {
         grid-template-columns: 1fr;
     }
-    #tokenSection > div {
+    
+    .form-textarea-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .config-row {
         flex-direction: column;
         align-items: stretch;
     }
+    
+    .dashboard {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
     #studyTable {
         font-size: 12px;
     }
+    
     #studyTable th,
     #studyTable td {
-        padding: 6px 5px;
+        padding: 5px 4px;
+        max-width: 120px;
+    }
+    
+    .duplicate-actions .btn {
+        min-width: 100%;
     }
 }
 
-/* স্ক্রল বার কাস্টম */
+@media (max-width: 480px) {
+    .dashboard {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ========================================
+   স্ক্রলবার
+   ======================================== */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
+
 ::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb {
     background: #888;
     border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
