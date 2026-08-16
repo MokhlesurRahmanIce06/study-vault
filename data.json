@@ -1,4 +1,25 @@
 {
-  "topics": [],
-  "nextId": 1
+  "topics": [
+    {
+      "mainTopic": "C1",
+      "subTopic": "c2",
+      "question": "dwfs",
+      "answer": "asd",
+      "studyType": "Learn",
+      "studyCount": 2,
+      "lastStudied": "2026-08-17T17:22",
+      "source": "23",
+      "vivaRef": "wqe",
+      "captured": 45,
+      "confidence": 55,
+      "difficulty": "Medium",
+      "knowledgeStatus": "New",
+      "remarks": "weqre",
+      "relatedTopics": "C#, DBA",
+      "version": 1,
+      "dateCreated": "2026-08-16 11:22",
+      "id": 1
+    }
+  ],
+  "nextId": 2
 }
