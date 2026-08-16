@@ -10,6 +10,8 @@ let config = {
 let topics = [];
 let nextId = 1;
 let currentSha = '';
+let duplicateData = null;
+let tempTopic = null;
 
 // ========================================
 // কনফিগ ম্যানেজমেন্ট
@@ -30,7 +32,6 @@ function saveConfig() {
     document.getElementById('statusMsg').textContent = '✅ কনফিগ সেভ হয়েছে!';
     document.getElementById('statusMsg').style.color = '#28a745';
     
-    // অটো লোড
     loadFromGitHub();
 }
 
@@ -68,11 +69,10 @@ async function loadFromGitHub() {
         });
 
         if (response.status === 404) {
-            // ফাইল নেই
             topics = [];
             nextId = 1;
             currentSha = '';
-            renderTable();
+            renderAll();
             showStatus('📭 কোনো ডেটা নেই। নতুন তৈরি করা হবে।', 'warning');
             return;
         }
@@ -85,30 +85,28 @@ async function loadFromGitHub() {
         const data = await response.json();
         currentSha = data.sha;
         
-        // Base64 ডিকোড
         const content = atob(data.content);
         const jsonData = JSON.parse(content);
         
         topics = jsonData.topics || [];
         nextId = jsonData.nextId || 1;
         
-        renderTable();
+        renderAll();
         showStatus(`✅ লোড সফল! ${topics.length} টি টপিক পাওয়া গেছে।`, 'success');
         
     } catch (error) {
         console.error('লোড ত্রুটি:', error);
         showStatus(`❌ লোড ব্যর্থ: ${error.message}`, 'error');
         
-        // অফলাইনে লোকাল ডেটা দেখান
         if (topics.length === 0) {
             topics = [];
-            renderTable();
+            renderAll();
         }
     }
 }
 
 // ========================================
-// GitHub API - ডেটা সিঙ্ক (Push)
+// GitHub API - ডেটা সিঙ্ক
 // ========================================
 async function syncToGitHub() {
     if (!config.token || !config.repo) {
@@ -170,178 +168,135 @@ async function syncToGitHub() {
 }
 
 // ========================================
-// স্ট্যাটাস বার
+// ড্যাশবোর্ড আপডেট
 // ========================================
-function showStatus(message, type) {
-    const statusDiv = document.getElementById('syncStatus');
-    statusDiv.style.display = 'block';
-    statusDiv.textContent = message;
+function updateDashboard() {
+    const total = topics.length;
+    let totalQuestions = 0;
+    let totalStudies = 0;
+    let totalCapture = 0;
+    let needsRevision = 0;
+    let interviewReady = 0;
+    let captureCount = 0;
+
+    topics.forEach(t => {
+        totalQuestions++;
+        totalStudies += (t.studyCount || 0);
+        if (t.captured) {
+            totalCapture += t.captured;
+            captureCount++;
+        }
+        if (t.knowledgeStatus === 'Needs Revision') needsRevision++;
+        if (t.knowledgeStatus === 'Interview Ready') interviewReady++;
+    });
+
+    document.getElementById('totalTopics').textContent = total;
+    document.getElementById('totalQuestions').textContent = totalQuestions;
+    document.getElementById('totalStudies').textContent = totalStudies;
+    document.getElementById('avgCapture').textContent = captureCount > 0 ? Math.round(totalCapture / captureCount) + '%' : '0%';
+    document.getElementById('needsRevision').textContent = needsRevision;
+    document.getElementById('interviewReady').textContent = interviewReady;
+}
+
+// ========================================
+// ফ্রিকোয়েন্টলি স্টাডিয়েড আপডেট
+// ========================================
+function updateFrequentTopics() {
+    const freqDiv = document.getElementById('frequentTopics');
     
-    const colors = {
-        info: { bg: '#d1ecf1', border: '#bee5eb', text: '#0c5460' },
-        success: { bg: '#d4edda', border: '#c3e6cb', text: '#155724' },
-        warning: { bg: '#fff3cd', border: '#ffeaa7', text: '#856404' },
-        error: { bg: '#f8d7da', border: '#f5c6cb', text: '#721c24' }
-    };
+    if (topics.length === 0) {
+        freqDiv.innerHTML = '<span style="color:#999; font-size:14px;">কোনো ডেটা নেই</span>';
+        return;
+    }
+
+    // সাজানো
+    const sorted = [...topics].sort((a, b) => (b.studyCount || 0) - (a.studyCount || 0));
+    const top5 = sorted.slice(0, 5).filter(t => t.studyCount > 0);
     
-    const style = colors[type] || colors.info;
-    statusDiv.style.background = style.bg;
-    statusDiv.style.border = `1px solid ${style.border}`;
-    statusDiv.style.color = style.text;
-    statusDiv.style.padding = '12px';
-    statusDiv.style.borderRadius = '6px';
+    if (top5.length === 0) {
+        freqDiv.innerHTML = '<span style="color:#999; font-size:14px;">এখনো কোনো টপিক স্টাডি করা হয়নি</span>';
+        return;
+    }
+
+    freqDiv.innerHTML = top5.map(t => `
+        <span class="frequent-item">
+            ${t.mainTopic} — <span class="count">${t.studyCount} times</span>
+        </span>
+    `).join('');
+}
+
+// ========================================
+// রেন্ডার অল
+// ========================================
+function renderAll() {
+    renderTable();
+    updateDashboard();
+    updateFrequentTopics();
+}
+
+// ========================================
+// সার্চ
+// ========================================
+function searchTopics() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('filterStatus').value;
+    const difficultyFilter = document.getElementById('filterDifficulty').value;
+    
+    const filtered = topics.filter(t => {
+        const matchText = t.mainTopic.toLowerCase().includes(query) ||
+                         t.subTopic.toLowerCase().includes(query) ||
+                         t.question.toLowerCase().includes(query) ||
+                         (t.answer && t.answer.toLowerCase().includes(query));
+        
+        const matchStatus = statusFilter === 'all' || t.knowledgeStatus === statusFilter;
+        const matchDifficulty = difficultyFilter === 'all' || t.difficulty === difficultyFilter;
+        
+        return matchText && matchStatus && matchDifficulty;
+    });
+    
+    renderTable(filtered);
 }
 
 // ========================================
 // টেবিল রেন্ডার
 // ========================================
-function renderTable() {
+function renderTable(data = null) {
     const tbody = document.getElementById('tableBody');
+    const items = data || topics;
     
-    if (topics.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#999;">
-            📭 এখনো কোনো টপিক যোগ করা হয়নি। উপরের ফর্ম দিয়ে যোগ করুন।
+    if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:#999;">
+            📭 কোনো টপিক পাওয়া যায়নি
         </td></tr>`;
         return;
     }
     
-    tbody.innerHTML = topics.map((t, index) => `
+    tbody.innerHTML = items.map((t, index) => `
         <tr>
             <td>${index + 1}</td>
             <td><strong>${escapeHtml(t.mainTopic)}</strong></td>
             <td>${escapeHtml(t.subTopic)}</td>
-            <td style="font-size:12px;">${escapeHtml(t.questions || '—')}</td>
-            <td style="font-size:12px;">${escapeHtml(t.answer || '—')}</td>
+            <td style="font-size:12px;">${escapeHtml(t.question)}</td>
+            <td style="font-size:12px;">${escapeHtml(t.answer ? t.answer.substring(0, 60) + (t.answer.length > 60 ? '...' : '') : '—')}</td>
+            <td><span class="status-badge status-${t.knowledgeStatus ? t.knowledgeStatus.replace(/ /g, '\\ ') : 'New'}">${t.knowledgeStatus || 'New'}</span></td>
             <td style="text-align:center; white-space:nowrap;">
-                <span class="badge" style="background:#1a1a2e;">${t.studyCount || 0}</span>
+                <span class="badge badge-info">${t.studyCount || 0}</span>
                 <button onclick="incrementStudy(${t.id})" class="btn btn-warning" style="padding:2px 10px; font-size:11px;">+1</button>
             </td>
             <td style="text-align:center;">
-                <span class="badge" style="background:${getColor(t.captured)};">${t.captured || 0}%</span>
+                <span class="badge ${t.captured >= 80 ? 'badge-success' : t.captured >= 50 ? 'badge-warning' : 'badge-danger'}">${t.captured || 0}%</span>
             </td>
             <td class="actions">
-                <button onclick="editTopic(${t.id})" class="btn btn-primary" style="padding:2px 12px;" title="এডিট">✏️</button>
-                <button onclick="deleteTopic(${t.id})" class="btn btn-danger" style="padding:2px 12px;" title="ডিলিট">🗑️</button>
+                <button onclick="editTopic(${t.id})" class="btn btn-primary" style="padding:2px 10px;" title="এডিট">✏️</button>
+                <button onclick="deleteTopic(${t.id})" class="btn btn-danger" style="padding:2px 10px;" title="ডিলিট">🗑️</button>
+                <button onclick="viewDetails(${t.id})" class="btn btn-info" style="padding:2px 10px;" title="ডিটেইলস">📄</button>
             </td>
         </tr>
     `).join('');
 }
 
 // ========================================
-// হেল্পার ফাংশন
+// ডিটেইলস ভিউ
 // ========================================
-function getColor(percent) {
-    if (percent >= 80) return '#28a745';
-    if (percent >= 50) return '#ffc107';
-    return '#dc3545';
-}
-
-function escapeHtml(text) {
-    if (!text) return '—';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// ========================================
-// CRUD অপারেশন (লোকাল)
-// ========================================
-function saveTopic() {
-    const id = document.getElementById('editId').value;
-    const topic = {
-        mainTopic: document.getElementById('mainTopic').value.trim(),
-        subTopic: document.getElementById('subTopic').value.trim(),
-        questions: document.getElementById('questions').value.trim(),
-        answer: document.getElementById('answer').value.trim(),
-        source: document.getElementById('source').value.trim(),
-        vivaRef: document.getElementById('vivaRef').value.trim(),
-        remarks: document.getElementById('remarks').value.trim(),
-        captured: parseInt(document.getElementById('captured').value) || 0
-    };
-
-    // ভ্যালিডেশন
-    if (!topic.mainTopic || !topic.subTopic) {
-        alert('⚠️ Main Topic এবং Sub-Topic অবশ্যই পূরণ করুন!');
-        return;
-    }
-
-    if (id) {
-        // এডিট মোড
-        const index = topics.findIndex(t => t.id === parseInt(id));
-        if (index !== -1) {
-            topics[index] = { ...topics[index], ...topic };
-        }
-    } else {
-        // নতুন যোগ
-        topic.id = nextId++;
-        topic.studyCount = 0;
-        topic.dateCreated = new Date().toISOString().split('T')[0];
-        topics.push(topic);
-    }
-
-    renderTable();
-    resetForm();
-    showStatus('✅ লোকালে সেভ হয়েছে। GitHub-এ সিঙ্ক করুন!', 'success');
-}
-
-function editTopic(id) {
-    const topic = topics.find(t => t.id === id);
-    if (!topic) return;
-    
-    document.getElementById('editId').value = id;
-    document.getElementById('mainTopic').value = topic.mainTopic;
-    document.getElementById('subTopic').value = topic.subTopic;
-    document.getElementById('questions').value = topic.questions || '';
-    document.getElementById('answer').value = topic.answer || '';
-    document.getElementById('source').value = topic.source || '';
-    document.getElementById('vivaRef').value = topic.vivaRef || '';
-    document.getElementById('remarks').value = topic.remarks || '';
-    document.getElementById('captured').value = topic.captured || 0;
-    
-    document.getElementById('formTitle').textContent = '✏️ টপিক এডিট করুন';
-    document.getElementById('saveBtn').textContent = '🔄 আপডেট করুন';
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function deleteTopic(id) {
-    if (!confirm('⚠️ কি আপনি এই টপিক ডিলিট করতে চান?')) return;
-    
-    topics = topics.filter(t => t.id !== id);
-    renderTable();
-    showStatus('🗑️ ডিলিট হয়েছে। GitHub-এ সিঙ্ক করুন।', 'warning');
-}
-
-function incrementStudy(id) {
-    const topic = topics.find(t => t.id === id);
-    if (topic) {
-        topic.studyCount = (topic.studyCount || 0) + 1;
-        renderTable();
-        showStatus('📈 স্টাডি কাউন্ট +১ হয়েছে। সিঙ্ক করুন!', 'info');
-    }
-}
-
-function resetForm() {
-    document.getElementById('editId').value = '';
-    document.getElementById('mainTopic').value = '';
-    document.getElementById('subTopic').value = '';
-    document.getElementById('questions').value = '';
-    document.getElementById('answer').value = '';
-    document.getElementById('source').value = '';
-    document.getElementById('vivaRef').value = '';
-    document.getElementById('remarks').value = '';
-    document.getElementById('captured').value = '';
-    document.getElementById('formTitle').textContent = '➕ নতুন টপিক যোগ করুন';
-    document.getElementById('saveBtn').textContent = '💾 সেভ করুন';
-}
-
-// ========================================
-// পেজ লোড
-// ========================================
-window.onload = function() {
-    loadConfig();
-    // কনফিগ থাকলে অটো লোড
-    if (config.token && config.repo) {
-        loadFromGitHub();
-    }
-};
+function viewDetails(id) {
+    const topic = topics.find(t => t.id
