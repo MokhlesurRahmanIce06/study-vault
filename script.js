@@ -299,4 +299,296 @@ function renderTable(data = null) {
 // ডিটেইলস ভিউ
 // ========================================
 function viewDetails(id) {
-    const topic = topics.find(t => t.id
+    const topic = topics.find(t => t.id === id);
+    if (!topic) return;
+    
+    const details = `
+        📚 Main Topic: ${topic.mainTopic}
+        📖 Sub Topic: ${topic.subTopic}
+        ❓ Question: ${topic.question}
+        ✅ Answer: ${topic.answer || 'N/A'}
+        📊 Status: ${topic.knowledgeStatus || 'New'}
+        📈 Capture: ${topic.captured || 0}%
+        💪 Confidence: ${topic.confidence || 0}%
+        📖 Study Count: ${topic.studyCount || 0}
+        📅 Last Studied: ${topic.lastStudied || 'N/A'}
+        🔄 Version: ${topic.version || 1}
+        📂 Source: ${topic.source || 'N/A'}
+        🔗 Viva Ref: ${topic.vivaRef || 'N/A'}
+        🔗 Related: ${topic.relatedTopics || 'N/A'}
+        💬 Remarks: ${topic.remarks || 'N/A'}
+        ⭐ Difficulty: ${topic.difficulty || 'Medium'}
+        📋 Study Type: ${topic.studyType || 'Learn'}
+    `;
+    
+    alert(details);
+}
+
+// ========================================
+// হেল্পার ফাংশন
+// ========================================
+function escapeHtml(text) {
+    if (!text) return '—';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function getCurrentDateTime() {
+    return new Date().toISOString().replace('T', ' ').substring(0, 16);
+}
+
+// ========================================
+// ডুপ্লিকেট ডিটেকশন
+// ========================================
+function checkDuplicate(question, mainTopic) {
+    const normalized = question.toLowerCase().trim();
+    const topicNormalized = mainTopic.toLowerCase().trim();
+    
+    const existing = topics.find(t => 
+        t.question.toLowerCase().trim() === normalized &&
+        t.mainTopic.toLowerCase().trim() === topicNormalized
+    );
+    
+    return existing || null;
+}
+
+function showDuplicateAlert(existing, newData) {
+    duplicateData = existing;
+    tempTopic = newData;
+    
+    document.getElementById('duplicateAlert').style.display = 'flex';
+    document.getElementById('duplicateInfo').innerHTML = `
+        <strong>Existing:</strong> ${existing.mainTopic} → ${existing.question}<br>
+        <strong>Studied:</strong> ${existing.studyCount || 0} times<br>
+        <strong>Status:</strong> ${existing.knowledgeStatus || 'New'}<br>
+        <strong>Capture:</strong> ${existing.captured || 0}%
+    `;
+}
+
+function closeDuplicateAlert() {
+    document.getElementById('duplicateAlert').style.display = 'none';
+    duplicateData = null;
+    tempTopic = null;
+}
+
+function studyExisting() {
+    if (duplicateData) {
+        incrementStudy(duplicateData.id);
+        closeDuplicateAlert();
+        showStatus('📖 Existing topic studied! Count +1', 'success');
+    }
+}
+
+function addAsVariant() {
+    if (tempTopic) {
+        // প্রশ্নে ভ্যারিয়েন্ট যোগ করুন
+        tempTopic.question = tempTopic.question + ' (Variant)';
+        tempTopic.id = nextId++;
+        tempTopic.studyCount = 0;
+        tempTopic.dateCreated = getCurrentDateTime();
+        topics.push(tempTopic);
+        renderAll();
+        resetForm();
+        closeDuplicateAlert();
+        showStatus('✅ Added as new variant!', 'success');
+    }
+}
+
+function updateExisting() {
+    if (duplicateData && tempTopic) {
+        // আপডেট করুন
+        const index = topics.findIndex(t => t.id === duplicateData.id);
+        if (index !== -1) {
+            topics[index] = { 
+                ...topics[index], 
+                answer: tempTopic.answer || topics[index].answer,
+                version: (topics[index].version || 1) + 1,
+                lastUpdated: getCurrentDateTime()
+            };
+            renderAll();
+            resetForm();
+            closeDuplicateAlert();
+            showStatus('✅ Existing topic updated!', 'success');
+        }
+    }
+}
+
+function createNew() {
+    if (tempTopic) {
+        tempTopic.id = nextId++;
+        tempTopic.studyCount = 0;
+        tempTopic.dateCreated = getCurrentDateTime();
+        topics.push(tempTopic);
+        renderAll();
+        resetForm();
+        closeDuplicateAlert();
+        showStatus('✅ New topic created successfully!', 'success');
+    }
+}
+
+// ========================================
+// CRUD অপারেশন
+// ========================================
+function saveTopic() {
+    const id = document.getElementById('editId').value;
+    
+    const topic = {
+        mainTopic: document.getElementById('mainTopic').value.trim(),
+        subTopic: document.getElementById('subTopic').value.trim(),
+        question: document.getElementById('question').value.trim(),
+        answer: document.getElementById('answer').value.trim(),
+        studyType: document.getElementById('studyType').value,
+        studyCount: parseInt(document.getElementById('studyCount').value) || 0,
+        lastStudied: document.getElementById('lastStudied').value || getCurrentDateTime(),
+        source: document.getElementById('source').value.trim(),
+        vivaRef: document.getElementById('vivaRef').value.trim(),
+        captured: parseInt(document.getElementById('captured').value) || 0,
+        confidence: parseInt(document.getElementById('confidence').value) || 0,
+        difficulty: document.getElementById('difficulty').value,
+        knowledgeStatus: document.getElementById('knowledgeStatus').value,
+        remarks: document.getElementById('remarks').value.trim(),
+        relatedTopics: document.getElementById('relatedTopics').value.trim(),
+        version: parseInt(document.getElementById('version').value) || 1,
+        dateCreated: getCurrentDateTime()
+    };
+
+    // ভ্যালিডেশন
+    if (!topic.mainTopic || !topic.subTopic || !topic.question) {
+        alert('⚠️ Main Topic, Sub Topic এবং Question অবশ্যই পূরণ করুন!');
+        return;
+    }
+
+    if (id) {
+        // এডিট মোড
+        const index = topics.findIndex(t => t.id === parseInt(id));
+        if (index !== -1) {
+            topics[index] = { 
+                ...topics[index], 
+                ...topic,
+                version: (topics[index].version || 1) + 1,
+                lastUpdated: getCurrentDateTime()
+            };
+        }
+        renderAll();
+        resetForm();
+        showStatus('✅ টপিক আপডেট হয়েছে! সিঙ্ক করুন।', 'success');
+        return;
+    }
+
+    // ডুপ্লিকেট চেক
+    const existing = checkDuplicate(topic.question, topic.mainTopic);
+    if (existing) {
+        showDuplicateAlert(existing, topic);
+        return;
+    }
+
+    // নতুন যোগ
+    topic.id = nextId++;
+    topics.push(topic);
+    renderAll();
+    resetForm();
+    showStatus('✅ টপিক যোগ হয়েছে! সিঙ্ক করুন।', 'success');
+}
+
+function editTopic(id) {
+    const topic = topics.find(t => t.id === id);
+    if (!topic) return;
+    
+    document.getElementById('editId').value = id;
+    document.getElementById('mainTopic').value = topic.mainTopic;
+    document.getElementById('subTopic').value = topic.subTopic;
+    document.getElementById('question').value = topic.question;
+    document.getElementById('answer').value = topic.answer || '';
+    document.getElementById('studyType').value = topic.studyType || 'Learn';
+    document.getElementById('studyCount').value = topic.studyCount || 0;
+    document.getElementById('lastStudied').value = topic.lastStudied || '';
+    document.getElementById('source').value = topic.source || '';
+    document.getElementById('vivaRef').value = topic.vivaRef || '';
+    document.getElementById('captured').value = topic.captured || 0;
+    document.getElementById('confidence').value = topic.confidence || 0;
+    document.getElementById('difficulty').value = topic.difficulty || 'Medium';
+    document.getElementById('knowledgeStatus').value = topic.knowledgeStatus || 'New';
+    document.getElementById('remarks').value = topic.remarks || '';
+    document.getElementById('relatedTopics').value = topic.relatedTopics || '';
+    document.getElementById('version').value = topic.version || 1;
+    
+    document.getElementById('formTitle').textContent = '✏️ টপিক এডিট করুন';
+    document.getElementById('saveBtn').textContent = '🔄 আপডেট করুন';
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function deleteTopic(id) {
+    if (!confirm('⚠️ কি আপনি এই টপিক ডিলিট করতে চান?')) return;
+    
+    topics = topics.filter(t => t.id !== id);
+    renderAll();
+    showStatus('🗑️ ডিলিট হয়েছে। সিঙ্ক করুন।', 'warning');
+}
+
+function incrementStudy(id) {
+    const topic = topics.find(t => t.id === id);
+    if (topic) {
+        topic.studyCount = (topic.studyCount || 0) + 1;
+        topic.lastStudied = getCurrentDateTime();
+        renderAll();
+        showStatus('📈 স্টাডি কাউন্ট +১ হয়েছে! সিঙ্ক করুন।', 'info');
+    }
+}
+
+function resetForm() {
+    document.getElementById('editId').value = '';
+    document.getElementById('mainTopic').value = '';
+    document.getElementById('subTopic').value = '';
+    document.getElementById('question').value = '';
+    document.getElementById('answer').value = '';
+    document.getElementById('studyType').value = 'Learn';
+    document.getElementById('studyCount').value = '0';
+    document.getElementById('lastStudied').value = '';
+    document.getElementById('source').value = '';
+    document.getElementById('vivaRef').value = '';
+    document.getElementById('captured').value = '';
+    document.getElementById('confidence').value = '';
+    document.getElementById('difficulty').value = 'Medium';
+    document.getElementById('knowledgeStatus').value = 'New';
+    document.getElementById('remarks').value = '';
+    document.getElementById('relatedTopics').value = '';
+    document.getElementById('version').value = '1';
+    
+    document.getElementById('formTitle').textContent = '➕ নতুন টপিক যোগ করুন';
+    document.getElementById('saveBtn').textContent = '💾 সেভ করুন';
+}
+
+// ========================================
+// স্ট্যাটাস বার
+// ========================================
+function showStatus(message, type) {
+    const statusDiv = document.getElementById('syncStatus');
+    statusDiv.style.display = 'block';
+    statusDiv.textContent = message;
+    
+    const colors = {
+        info: { bg: '#d1ecf1', border: '#bee5eb', text: '#0c5460' },
+        success: { bg: '#d4edda', border: '#c3e6cb', text: '#155724' },
+        warning: { bg: '#fff3cd', border: '#ffeaa7', text: '#856404' },
+        error: { bg: '#f8d7da', border: '#f5c6cb', text: '#721c24' }
+    };
+    
+    const style = colors[type] || colors.info;
+    statusDiv.style.background = style.bg;
+    statusDiv.style.border = `1px solid ${style.border}`;
+    statusDiv.style.color = style.text;
+    statusDiv.style.padding = '12px';
+    statusDiv.style.borderRadius = '6px';
+}
+
+// ========================================
+// পেজ লোড
+// ========================================
+window.onload = function() {
+    loadConfig();
+    if (config.token && config.repo) {
+        loadFromGitHub();
+    }
+};
