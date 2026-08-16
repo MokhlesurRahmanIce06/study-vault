@@ -73,43 +73,12 @@
             </div>
         </div>
 
-        <!-- ফর্ম -->
-        <div class="form-card">
-            <h3 id="formTitle">➕ নতুন টপিক যোগ করুন</h3>
-            <input type="hidden" id="editId">
-            
-            <div class="form-grid">
-                <!-- বেসিক ইনফো -->
-                <input type="text" id="mainTopic" placeholder="Main Topic * (যেমন: Clean Architecture)">
-                <input type="text" id="subTopic" placeholder="Sub Topic * (যেমন: Dependency Inversion)">
-                <input type="text" id="question" placeholder="Question * (Viva/Interview Question)">
-                
-                <!-- স্টাডি ইনফো -->
-                <select id="studyType">
-                    <option value="Learn">🟢 Learn</option>
-                    <option value="Viva">🔴 Viva</option>
-                    <option value="Both">🟣 Both</option>
-                </select>
-                <input type="number" id="studyCount" placeholder="Study Count" value="0">
-                <input type="date" id="lastStudied">
-                
-                <!-- সোর্স ও রেফারেন্স -->
-                <input type="text" id="source" placeholder="Source (YouTube/Book/ChatGPT/Docs)">
-                <input type="text" id="vivaRef" placeholder="Job/Viva Reference">
-                
-                <!-- পার্সেন্টেজ -->
-                <input type="number" id="captured" placeholder="Captured % (0-100)" min="0" max="100">
-                <input type="number" id="confidence" placeholder="Confidence % (0-100)" min="0" max="100">
-                
-                <!-- ডিফিকালটি -->
-                <select id="difficulty">
-                    <option value="Easy">🟢 Easy</option>
-                    <option value="Medium">🟡 Medium</option>
-                    <option value="Hard">🔴 Hard</option>
-                </select>
-                
-                <!-- নলেজ স্ট্যাটাস -->
-                <select id="knowledgeStatus">
+        <!-- সার্চ ও ফিল্টার সেকশন -->
+        <div class="filter-section">
+            <div class="search-row">
+                <input type="text" id="searchInput" placeholder="🔍 Search topics, questions, or answers..." onkeyup="applyFilters()">
+                <select id="filterStatus" onchange="applyFilters()">
+                    <option value="all">All Status</option>
                     <option value="New">🟡 New</option>
                     <option value="Learning">🔵 Learning</option>
                     <option value="Practicing">🟠 Practicing</option>
@@ -117,56 +86,23 @@
                     <option value="Interview Ready">🟣 Interview Ready</option>
                     <option value="Needs Revision">⚫ Needs Revision</option>
                 </select>
+                <select id="filterDifficulty" onchange="applyFilters()">
+                    <option value="all">All Difficulty</option>
+                    <option value="Easy">🟢 Easy</option>
+                    <option value="Medium">🟡 Medium</option>
+                    <option value="Hard">🔴 Hard</option>
+                </select>
+                <button onclick="openAddModal()" class="btn btn-primary" style="white-space:nowrap;">➕ নতুন টপিক</button>
             </div>
             
-            <!-- টেক্সট এরিয়া -->
-            <div class="form-textarea-grid">
-                <textarea id="answer" placeholder="Answer (Canonical Answer)" rows="3"></textarea>
-                <textarea id="remarks" placeholder="Remarks (Observations/Notes)" rows="2"></textarea>
-                <input type="text" id="relatedTopics" placeholder="Related Topics (কমা দিয়ে আলাদা)">
-                <input type="number" id="version" placeholder="Version" value="1">
+            <!-- Date Range Filter -->
+            <div class="date-range-row">
+                <label>📅 From:</label>
+                <input type="date" id="dateFrom" onchange="applyFilters()">
+                <label>To:</label>
+                <input type="date" id="dateTo" onchange="applyFilters()">
+                <button onclick="clearDateFilter()" class="btn btn-secondary" style="padding:6px 15px;">🗑️ Clear</button>
             </div>
-            
-            <div class="form-actions">
-                <button onclick="saveTopic()" class="btn btn-primary" id="saveBtn">💾 সেভ করুন</button>
-                <button onclick="resetForm()" class="btn btn-secondary">❌ ক্লিয়ার</button>
-                <span style="margin-left: auto; font-size: 12px; color: #999;">* চিহ্নিত ফিল্ড আবশ্যক</span>
-            </div>
-        </div>
-
-        <!-- ডুপ্লিকেট ডিটেকশন -->
-        <div id="duplicateAlert" class="duplicate-alert" style="display:none;">
-            <div class="duplicate-content">
-                <h4>⚠️ Similar Question Already Exists!</h4>
-                <p id="duplicateInfo"></p>
-                <div class="duplicate-actions">
-                    <button onclick="studyExisting()" class="btn btn-info">📖 Study Existing</button>
-                    <button onclick="addAsVariant()" class="btn btn-warning">➕ Add as Variant</button>
-                    <button onclick="updateExisting()" class="btn btn-primary">🔄 Update Existing</button>
-                    <button onclick="createNew()" class="btn btn-success">✨ Create New</button>
-                    <button onclick="closeDuplicateAlert()" class="btn btn-secondary">❌ Cancel</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- সার্চ বার -->
-        <div class="search-section">
-            <input type="text" id="searchInput" placeholder="🔍 Search topics, questions, or answers..." onkeyup="searchTopics()">
-            <select id="filterStatus" onchange="searchTopics()">
-                <option value="all">All Status</option>
-                <option value="New">🟡 New</option>
-                <option value="Learning">🔵 Learning</option>
-                <option value="Practicing">🟠 Practicing</option>
-                <option value="Comfortable">🟢 Comfortable</option>
-                <option value="Interview Ready">🟣 Interview Ready</option>
-                <option value="Needs Revision">⚫ Needs Revision</option>
-            </select>
-            <select id="filterDifficulty" onchange="searchTopics()">
-                <option value="all">All Difficulty</option>
-                <option value="Easy">🟢 Easy</option>
-                <option value="Medium">🟡 Medium</option>
-                <option value="Hard">🔴 Hard</option>
-            </select>
         </div>
 
         <!-- টেবিল -->
@@ -198,6 +134,145 @@
             💡 সব ডেটা GitHub-এর <code>data.json</code> ফাইলে সেভ হয়। পরিবর্তন করার পর <strong>☁️ সিঙ্ক</strong> বাটন চাপতে ভুলবেন না!
         </div>
     </div>
+
+    <!-- ======================================== -->
+    <!-- MODAL (Popup Form) -->
+    <!-- ======================================== -->
+    <div id="topicModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">➕ নতুন টপিক যোগ করুন</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                
+                <div class="modal-grid">
+                    <!-- বেসিক ইনফো -->
+                    <div class="form-group">
+                        <label>Main Topic *</label>
+                        <input type="text" id="mainTopic" placeholder="যেমন: Clean Architecture">
+                    </div>
+                    <div class="form-group">
+                        <label>Sub Topic *</label>
+                        <input type="text" id="subTopic" placeholder="যেমন: Dependency Inversion">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Question *</label>
+                        <input type="text" id="question" placeholder="Viva/Interview Question">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Answer</label>
+                        <textarea id="answer" placeholder="Your canonical answer" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-grid">
+                    <!-- স্টাডি ইনফো -->
+                    <div class="form-group">
+                        <label>Study Type</label>
+                        <select id="studyType">
+                            <option value="Learn">🟢 Learn</option>
+                            <option value="Viva">🔴 Viva</option>
+                            <option value="Both">🟣 Both</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Study Count</label>
+                        <input type="number" id="studyCount" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Studied</label>
+                        <input type="datetime-local" id="lastStudied">
+                    </div>
+                    
+                    <!-- সোর্স ও রেফারেন্স -->
+                    <div class="form-group">
+                        <label>Source</label>
+                        <input type="text" id="source" placeholder="YouTube/Book/ChatGPT/Docs">
+                    </div>
+                    <div class="form-group">
+                        <label>Job/Viva Reference</label>
+                        <input type="text" id="vivaRef" placeholder="যেমন: Google Intern">
+                    </div>
+                    
+                    <!-- পার্সেন্টেজ -->
+                    <div class="form-group">
+                        <label>Captured %</label>
+                        <input type="number" id="captured" placeholder="0-100" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Confidence %</label>
+                        <input type="number" id="confidence" placeholder="0-100" min="0" max="100">
+                    </div>
+                    
+                    <!-- ডিফিকালটি -->
+                    <div class="form-group">
+                        <label>Difficulty</label>
+                        <select id="difficulty">
+                            <option value="Easy">🟢 Easy</option>
+                            <option value="Medium" selected>🟡 Medium</option>
+                            <option value="Hard">🔴 Hard</option>
+                        </select>
+                    </div>
+                    
+                    <!-- নলেজ স্ট্যাটাস -->
+                    <div class="form-group">
+                        <label>Knowledge Status</label>
+                        <select id="knowledgeStatus">
+                            <option value="New">🟡 New</option>
+                            <option value="Learning">🔵 Learning</option>
+                            <option value="Practicing">🟠 Practicing</option>
+                            <option value="Comfortable">🟢 Comfortable</option>
+                            <option value="Interview Ready">🟣 Interview Ready</option>
+                            <option value="Needs Revision">⚫ Needs Revision</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-grid">
+                    <div class="form-group full-width">
+                        <label>Remarks</label>
+                        <textarea id="remarks" placeholder="Your observations/notes" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Related Topics</label>
+                        <input type="text" id="relatedTopics" placeholder="কমা দিয়ে আলাদা করুন">
+                    </div>
+                    <div class="form-group">
+                        <label>Version</label>
+                        <input type="number" id="version" value="1">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal()" class="btn btn-secondary">❌ বাতিল</button>
+                <button onclick="saveTopic()" class="btn btn-primary" id="saveBtn">💾 সেভ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================== -->
+    <!-- ডুপ্লিকেট এলার্ট (Modal) -->
+    <!-- ======================================== -->
+    <div id="duplicateModal" class="modal">
+        <div class="modal-content" style="max-width:500px;">
+            <div class="modal-header" style="background:#dc3545; color:white;">
+                <h3>⚠️ Similar Question Already Exists!</h3>
+                <span class="modal-close" onclick="closeDuplicateAlert()" style="color:white;">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p id="duplicateInfo"></p>
+                <div class="duplicate-actions">
+                    <button onclick="studyExisting()" class="btn btn-info">📖 Study Existing</button>
+                    <button onclick="addAsVariant()" class="btn btn-warning">➕ Add as Variant</button>
+                    <button onclick="updateExisting()" class="btn btn-primary">🔄 Update Existing</button>
+                    <button onclick="createNew()" class="btn btn-success">✨ Create New</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
